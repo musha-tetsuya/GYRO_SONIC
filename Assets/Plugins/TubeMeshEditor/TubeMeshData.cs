@@ -6,7 +6,6 @@ using UnityEngine;
 /// <summary>
 /// チューブメッシュデータ
 /// </summary>
-[CreateAssetMenu(menuName = "ScriptableObject/TubeMeshData")]
 public class TubeMeshData : ScriptableObject
 {
     /// <summary>
