@@ -10,9 +10,15 @@ public class RunScene : MonoBehaviour
     [SerializeField]
     private GameObject pipePrefab = null;
 
+    [SerializeField]
+    private Transform cameraTransform = null;
+
     // Start is called before the first frame update
     void Start()
     {
+        
+
+        /*
         var points = this.routePath.path.localPoints;
 
         for (int i = 1; i < points.Length; i++)
@@ -29,7 +35,7 @@ public class RunScene : MonoBehaviour
             pipe.transform.localScale = new Vector3(1f, 1f, x);
 
         }
-
+        */
 
         //10m : 45s
         //5b : 1s

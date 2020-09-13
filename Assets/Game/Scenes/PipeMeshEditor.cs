@@ -28,6 +28,65 @@ public class PipeMeshEditor : MonoBehaviour
     [SerializeField]
     private float ringDistance = 1f;
 
+    [SerializeField]
+    private Transform cameraPosition = null;
+
+    [SerializeField]
+    private Transform cameraAngle = null;
+
+    [SerializeField]
+    private float spd = 1f;
+
+    [SerializeField]
+    private float angleSpd = 1f;
+
+    [SerializeField]
+    private GameObject obstaclePrefab = null;
+
+    private float time = 0f;
+
+    private void Start()
+    {
+        this.cameraPosition.localPosition = this.pathCreator.path.GetPointAtTime(0f) * scale;
+        this.cameraPosition.forward = this.pathCreator.path.GetDirection(0f);
+
+        for (int i = 5; i < 95; i++)
+        {
+            if (UnityEngine.Random.Range(0,4) == 0)
+            {
+                var o = Instantiate(this.obstaclePrefab);
+                var p = this.pathCreator.path.GetPointAtTime(i * 0.01f) * scale;
+                var v = this.pathCreator.path.GetDirection(i * 0.01f);
+                o.transform.localPosition = p;
+                o.transform.forward = v;
+
+                var a = o.transform.localEulerAngles;
+                a.z += UnityEngine.Random.Range(0, 360f);
+                o.transform.localEulerAngles = a; 
+            }
+        }
+    }
+
+    private void Update()
+    {
+        this.cameraPosition.localPosition = this.pathCreator.path.GetPointAtTime(this.time, PathCreation.EndOfPathInstruction.Stop) * scale;
+        this.cameraPosition.forward = this.pathCreator.path.GetDirection(this.time, PathCreation.EndOfPathInstruction.Stop);
+        this.time += Time.deltaTime * 0.01f * this.spd;
+
+        if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            var angle = this.cameraAngle.localEulerAngles;
+            angle.z -= this.angleSpd;
+            this.cameraAngle.localEulerAngles = angle;
+        }
+        else if (Input.GetKey(KeyCode.RightArrow))
+        {
+            var angle = this.cameraAngle.localEulerAngles;
+            angle.z += this.angleSpd;
+            this.cameraAngle.localEulerAngles = angle;
+        }
+    }
+
     private void CreateMesh()
     {
         this.rings.Clear();
@@ -146,6 +205,11 @@ public class PipeMeshEditor : MonoBehaviour
         this.meshFilter.mesh = mesh;
     }
 
+    private void SaveMesh()
+    {
+        AssetDatabase.CreateAsset(this.meshFilter.sharedMesh, "Assets/" + this.meshFilter.sharedMesh.name + ".asset");
+    }
+
     private void OnDrawGizmos()
     {
         for (int i = 0; i < this.rings.Count; i++)
@@ -169,6 +233,11 @@ public class PipeMeshEditor : MonoBehaviour
             if (GUILayout.Button("Create Mesh"))
             {
                 this.target.CreateMesh();
+            }
+
+            if (GUILayout.Button("Save Mesh"))
+            {
+                this.target.SaveMesh();
             }
         }
     }
