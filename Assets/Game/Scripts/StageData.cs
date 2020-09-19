@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(MeshFilter))]
-[RequireComponent(typeof(MeshRenderer))]
-public class StageData : MonoBehaviour
+[CreateAssetMenu(menuName = "ScriptableObject/StageData")]
+public class StageData : ScriptableObject
 {
     [SerializeField]
-    public PathCreation.PathCreator bezier = null;
+    public TubeMeshData tubeMeshData = null;
 
     [SerializeField]
-    public float scale = 1f;
+    public float startPosition = 0f;
+
+    [SerializeField]
+    public float goalPosition = 1f;
 }

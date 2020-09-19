@@ -6,6 +6,9 @@ using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
+/// <summary>
+/// ステージエディタ
+/// </summary>
 public class StageEditor : MonoBehaviour
 {
     /// <summary>
@@ -24,15 +27,18 @@ public class StageEditor : MonoBehaviour
     [SerializeField]
     private Transform playerAngle = null;
     /// <summary>
-    /// チューブメッシュデータ
+    /// ステージデータ
     /// </summary>
     [SerializeField]
-    private TubeMeshData tubeMeshData = null;
+    private StageData stageData = null;
     /// <summary>
     /// ステージプレハブ
     /// </summary>
     [SerializeField]
     private GameObject stagePrefab = null;
+
+    [SerializeField]
+    private Animator animator = null;
 
     [SerializeField]
     private float runSpeed = 1f;
@@ -60,6 +66,26 @@ public class StageEditor : MonoBehaviour
     /// ギミックリストのスクロール位置
     /// </summary>
     private Vector2 gimmickListScrollPosition = Vector2.zero;
+    /// <summary>
+    /// 自動移動コルーチン
+    /// </summary>
+    private Coroutine autoMoveCoroutine = null;
+
+    /// <summary>
+    /// Awake
+    /// </summary>
+    private void Awake()
+    {
+        //ギミック名一覧取得
+        this.gimmickNames = AssetDatabase
+            .FindAssets("", new string[]{ "Assets/AssetBundle/Resources/Gimmick" })
+            .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
+            .Select(path => Path.GetFileNameWithoutExtension(path))
+            .ToArray();
+
+        this.position = this.stageData.startPosition;
+        this.positionString = this.position.ToString();
+    }
 
     /// <summary>
     /// Start
@@ -69,15 +95,8 @@ public class StageEditor : MonoBehaviour
         //ステージ生成
         this.stageObj = PrefabUtility.InstantiatePrefab(this.stagePrefab) as GameObject;
 
-        //ギミック名一覧取得
-        this.gimmickNames = AssetDatabase
-            .FindAssets("", new string[]{ "Assets/AssetBundle/Resources/Gimmick" })
-            .Select(guid => AssetDatabase.GUIDToAssetPath(guid))
-            .Select(path => Path.GetFileNameWithoutExtension(path))
-            .ToArray();
-
         //プレイヤー位置を初期位置にセット
-        this.SetPlayerPosition(0f);
+        this.SetPlayerPosition(this.stageData.startPosition);
     }
 
     /// <summary>
@@ -97,6 +116,7 @@ public class StageEditor : MonoBehaviour
             }
         }
 
+        //回転
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             var angle = this.playerAngle.localEulerAngles;
@@ -104,6 +124,7 @@ public class StageEditor : MonoBehaviour
             this.playerAngle.localEulerAngles = angle;
         }
 
+        //回転
         if (Input.GetKey(KeyCode.RightArrow))
         {
             var angle = this.playerAngle.localEulerAngles;
@@ -112,43 +133,56 @@ public class StageEditor : MonoBehaviour
         }
     }
 
-    private IEnumerator RunUpdate()
+    /// <summary>
+    /// 自動移動
+    /// </summary>
+    private IEnumerator AutoMove()
     {
-        while (this.position < this.tubeMeshData.bezier.path.length)
+        //while (this.position < this.stageData.tubeMeshData.bezier.path.length)
+        while (this.position < this.stageData.goalPosition)
         {
             this.position += this.runSpeed * 0.001f;
             this.positionString = this.position.ToString();
-            //this.SetPlayerPosition(this.position);
+            this.animator.speed = 2.5f * this.runSpeed;
             yield return null;
         }
 
-        this.position = this.tubeMeshData.bezier.path.length;
-
-        this.coroutine = null;
+        //this.position = this.stageData.tubeMeshData.bezier.path.length;
+        this.position = this.stageData.goalPosition;
+        this.autoMoveCoroutine = null;
+        this.animator.Play("Standing(loop)");
+        this.animator.speed = 1f;
     }
-
-    private Coroutine coroutine = null;
 
     /// <summary>
     /// OnGUI
     /// </summary>
     private void OnGUI()
     {
-        /*if (this.coroutine != null)
+        if (this.autoMoveCoroutine == null)
         {
-            return;
-        }*/
-
-        if (GUILayout.Button("Play", GUILayout.Width(100f)))
-        {
-            this.coroutine = StartCoroutine(this.RunUpdate());
+            if (GUILayout.Button("Play", GUILayout.Width(100f)))
+            {
+                this.autoMoveCoroutine = StartCoroutine(this.AutoMove());
+                this.animator.Play("Running(loop)");
+                this.animator.speed = 2.5f * this.runSpeed;
+            }
         }
-
+        else
+        {
+            if (GUILayout.Button("Stop", GUILayout.Width(100f)))
+            {
+                StopCoroutine(this.autoMoveCoroutine);
+                this.autoMoveCoroutine = null;
+                this.animator.Play("Standing(loop)");
+                this.animator.speed = 1f;
+            }
+        }
 
         GUILayout.BeginHorizontal();
         {
             //ステージ内位置選択のスライダー
-            float newPosition = GUILayout.HorizontalSlider(this.position, 0f, this.tubeMeshData.bezier.path.length, GUILayout.Width(Screen.width * 0.75f));
+            float newPosition = GUILayout.HorizontalSlider(this.position, 0f, this.stageData.tubeMeshData.bezier.path.length, GUILayout.Width(Screen.width * 0.75f));
 
             //スライダーによってステージ内位置が変更されたら現在値を更新
             if (newPosition != this.position)
@@ -163,7 +197,7 @@ public class StageEditor : MonoBehaviour
             //入力されたテキストをパースしてステージ内位置を更新
             if (float.TryParse(this.positionString, out newPosition))
             {
-                this.position = Mathf.Clamp(newPosition, 0f, this.tubeMeshData.bezier.path.length);
+                this.position = Mathf.Clamp(newPosition, 0f, this.stageData.tubeMeshData.bezier.path.length);
             }
 
             //プレイヤー位置をセット
@@ -191,8 +225,8 @@ public class StageEditor : MonoBehaviour
     /// </summary>
     private void SetPlayerPosition(float position)
     {
-        this.playerPosition.localPosition = this.tubeMeshData.bezier.path.GetPointAtDistance(position, PathCreation.EndOfPathInstruction.Stop) * this.tubeMeshData.scale;
-        this.playerPosition.forward = this.tubeMeshData.bezier.path.GetDirectionAtDistance(position, PathCreation.EndOfPathInstruction.Stop);
+        this.playerPosition.localPosition = this.stageData.tubeMeshData.bezier.path.GetPointAtDistance(position, PathCreation.EndOfPathInstruction.Stop) * this.stageData.tubeMeshData.scale;
+        this.playerPosition.forward = this.stageData.tubeMeshData.bezier.path.GetDirectionAtDistance(position, PathCreation.EndOfPathInstruction.Stop);
     }
 
     /// <summary>
@@ -202,7 +236,44 @@ public class StageEditor : MonoBehaviour
     {
         var gimmickPrefab = Resources.Load<GameObject>("Gimmick/" + gimmickName);
         var gimmickObj = PrefabUtility.InstantiatePrefab(gimmickPrefab, this.stageObj.transform) as GameObject;
-        gimmickObj.transform.localPosition = this.tubeMeshData.bezier.path.GetPointAtDistance(position, PathCreation.EndOfPathInstruction.Stop) * this.tubeMeshData.scale;
-        gimmickObj.transform.forward = this.tubeMeshData.bezier.path.GetDirectionAtDistance(position, PathCreation.EndOfPathInstruction.Stop);
+        gimmickObj.transform.localPosition = this.stageData.tubeMeshData.bezier.path.GetPointAtDistance(position, PathCreation.EndOfPathInstruction.Stop) * this.stageData.tubeMeshData.scale;
+        gimmickObj.transform.forward = this.stageData.tubeMeshData.bezier.path.GetDirectionAtDistance(position, PathCreation.EndOfPathInstruction.Stop);
+    }
+
+    /// <summary>
+    /// カスタムインスペクター
+    /// </summary>
+    [CustomEditor(typeof(StageEditor))]
+    private class CustomInspector : Editor
+    {
+        private new StageEditor target => base.target as StageEditor;
+
+        private Editor stageDataEditor = null;
+
+        public override void OnInspectorGUI()
+        {
+            if (this.stageDataEditor == null && this.target.stageData != null)
+            {
+                CreateCachedEditor(this.target.stageData, null, ref this.stageDataEditor);
+            }
+
+            if (this.stageDataEditor != null && this.target.stageData == null)
+            {
+                this.stageDataEditor = null;
+            }
+
+            base.OnInspectorGUI();
+
+            if (this.stageDataEditor != null)
+            {
+                GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1f));
+
+                EditorGUI.indentLevel++;
+
+                this.stageDataEditor.OnInspectorGUI();
+
+                EditorGUI.indentLevel--;
+            }
+        }
     }
 }
