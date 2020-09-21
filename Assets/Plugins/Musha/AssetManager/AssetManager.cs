@@ -33,7 +33,7 @@ namespace Musha
         /// <summary>
         /// ロード中 or ロード済みのアセットリスト
         /// </summary>
-        private List<AssetHandler> handlers = new List<AssetHandler>();
+        public List<AssetHandler> handlers = new List<AssetHandler>();
 
         /// <summary>
         /// 積まれているコールバック一覧
