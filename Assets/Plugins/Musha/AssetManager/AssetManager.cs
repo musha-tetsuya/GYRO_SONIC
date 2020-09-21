@@ -105,6 +105,45 @@ namespace Musha
         }
 
         /// <summary>
+        /// 同期ロード
+        /// </summary>
+        public T Load<T>(string path) where T : UnityEngine.Object
+        {
+            //既に読み込みがかかっているか検索
+            var handler = this.FindAssetHandler(path, typeof(T));
+
+            //ハンドルが既存
+            if (handler != null)
+            {
+                //参照カウンタ増加
+                handler.referenceCount++;
+            }
+            else
+            {
+                //アセットバンドルかどうかの情報を検索
+                var info = this.FindAssetBundleInfo(path);
+                if (info == null)
+                {
+                    //Resources用アセットハンドラ生成
+                    handler = new ResourcesAssetHandler(path, typeof(T));
+                }
+                else
+                {
+                    //AssetBundle用アセットハンドラ生成
+                    handler = new AssetBundleAssetHandler(path, typeof(T), info);
+                }
+
+                //リストにアセットハンドラを保持
+                this.handlers.Add(handler);
+            }
+
+            //ロード
+            handler.Load();
+
+            return handler.asset as T;
+        }
+
+        /// <summary>
         /// 非同期ロード
         /// </summary>
         public AssetHandler LoadAsync<T>(string path, Action<T> onLoaded = null) where T : UnityEngine.Object
@@ -154,6 +193,49 @@ namespace Musha
             }
 
             return handler;
+        }
+
+        /// <summary>
+        /// シーンアセットの同期ロード
+        /// </summary>
+        public void LoadSceneAsset(string path)
+        {
+            //既に読み込みがかかっているか検索
+            var handler = this.FindAssetHandler(path);
+
+            //ハンドルが既存
+            if (handler != null)
+            {
+                //参照カウンタ増加
+                handler.referenceCount++;
+            }
+            //ハンドルが存在しなかったら
+            else
+            {
+                //アセットバンドル情報を検索
+                var info = this.FindAssetBundleInfo(path);
+                if (info == null)
+                {
+#if UNITY_EDITOR
+                    //ダミー用アセットハンドラ生成
+                    handler = new DummyAssetHandler(path);
+#else
+                    Debug.LogErrorFormat("{0}のアセットバンドル情報がありません。", path);
+                    return;
+#endif
+                }
+                else
+                {
+                    //AssetBundle用アセットハンドラ生成
+                    handler = new AssetBundleAssetHandler(path, null, info);
+                }
+
+                //リストにアセットハンドラを保持
+                this.handlers.Add(handler);
+            }
+
+            //ロード
+            handler.Load();
         }
 
         /// <summary>
