@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -145,7 +145,7 @@ namespace Musha
                     //次のシーンをロードするアクション
                     Action loadNextScene = () =>
                     {
-                        this.LoadAsync(sceneName, LoadSceneMode.Single, () =>
+                        this.LoadSceneAsync(sceneName, LoadSceneMode.Single, () =>
                         {
                             if (this.isAutoHideSceneChangeAnimation)
                             {
@@ -190,7 +190,7 @@ namespace Musha
         /// sceneNameには、BuildSettingsに含まれている場合はシーン名を。
         /// 含まれていないアセットバンドルのシーンの場合はシーンパスを入れる。（「Assets/」と「.unity」は不要）
         /// </br>
-        public void LoadAsync(string sceneName, LoadSceneMode mode, Action onLoaded = null)
+        public void LoadSceneAsync(string sceneName, LoadSceneMode mode, Action onLoaded = null)
         {
 #if UNITY_EDITOR
             //シーン情報検索
@@ -227,6 +227,18 @@ namespace Musha
             SceneManager.LoadSceneAsync(sceneName, mode).completed += (_) =>
             {
                 onLoaded?.Invoke();
+            };
+        }
+
+        /// <summary>
+        /// 非同期アンロード
+        /// 主にAdditiveしたシーンに対して行う
+        /// </summary>
+        public void UnloadSceneAsync(string sceneName, Action onCompleted = null)
+        {
+            SceneManager.UnloadSceneAsync(sceneName).completed += (_) =>
+            {
+                onCompleted?.Invoke();
             };
         }
     }

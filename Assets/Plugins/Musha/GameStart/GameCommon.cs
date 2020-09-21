@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,16 +17,16 @@ namespace Musha
         public RectTransform dialogRoot = null;
 
         /// <summary>
-        /// タッチブロック
-        /// </summary>
-        [SerializeField]
-        public Image touchBlock = null;
-
-        /// <summary>
         /// フェードルート
         /// </summary>
         [SerializeField]
         public RectTransform fadeRoot = null;
+
+        /// <summary>
+        /// タッチブロック
+        /// </summary>
+        [SerializeField]
+        public Image touchBlock = null;
 
         /// <summary>
         /// システムダイアログルート
