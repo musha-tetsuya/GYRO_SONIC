@@ -288,6 +288,7 @@ GameObject:
   - component: {fileID: 1028397095475172847}
   - component: {fileID: 1028397095475172845}
   - component: {fileID: 1028397095475172846}
+  - component: {fileID: 2994502556179427159}
   m_Layer: 0
   m_Name: GameCommon
   m_TagString: Untagged
@@ -340,6 +341,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxThreadCount: 5
+--- !u!114 &2994502556179427159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1028397095475172840}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c5f57150a4c74f46b18f2bc961aff78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneChangeAnimationPrefab: {fileID: 6865024382672739400, guid: 7a0233e8f329d8249aaa0c17c81da0bc,
+    type: 3}
 --- !u!1 &1028397095476475335
 GameObject:
   m_ObjectHideFlags: 0
