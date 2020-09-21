@@ -4,5 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Plugins/Musha/GameStart/GameStart.unity
+    guid: d645eb50a3869a1429e1733101fd6b16
+  - enabled: 1
+    path: Assets/Game/Scenes/Test.unity
+    guid: 3d652e09db237494e98f40d522c240e3
   m_configObjects: {}

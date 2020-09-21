@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 public class PipeMeshEditor : MonoBehaviour
 {
@@ -207,7 +209,9 @@ public class PipeMeshEditor : MonoBehaviour
 
     private void SaveMesh()
     {
+#if UNITY_EDITOR
         AssetDatabase.CreateAsset(this.meshFilter.sharedMesh, "Assets/" + this.meshFilter.sharedMesh.name + ".asset");
+#endif
     }
 
     private void OnDrawGizmos()
@@ -221,6 +225,7 @@ public class PipeMeshEditor : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
     [CustomEditor(typeof(PipeMeshEditor))]
     private class CustomInspector : Editor
     {
@@ -241,6 +246,7 @@ public class PipeMeshEditor : MonoBehaviour
             }
         }
     }
+#endif
 
     [Serializable]
     public class Ring
