@@ -15,12 +15,41 @@ namespace Musha
     /// </summary>
     public class ResourcesAssetHandler : AssetHandler
     {
+#if UNITY_EDITOR
+        /// <summary>
+        /// アセットバンドルシミュレーションロード用のパス
+        /// </summary>
+        private string assetPath = null;
+#endif
         /// <summary>
         /// construct
         /// </summary>
         public ResourcesAssetHandler(string path, Type type)
             : base(path, type)
         {
+#if UNITY_EDITOR
+            this.assetPath = AssetDatabase
+                .FindAssets(string.Format("{0} t:{1}", Path.GetFileNameWithoutExtension(this.path), this.type.Name), new string[]{ "Assets" })
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .FirstOrDefault(x => !x.Contains("/Resources/") && Path.ChangeExtension(x, null).EndsWith(this.path, StringComparison.OrdinalIgnoreCase));
+#endif
+        }
+
+        /// <summary>
+        /// 同期ロード
+        /// </summary>
+        protected override void LoadInternal()
+        {
+#if UNITY_EDITOR
+            if (!string.IsNullOrEmpty(this.assetPath))
+            {
+                //アセットバンドルのシミュレーションロード
+                this.asset = AssetDatabase.LoadAssetAtPath(this.assetPath, this.type);
+                return;
+            }
+#endif
+            //アセットを確保
+            this.asset = Resources.Load(this.path, this.type);
         }
 
         /// <summary>
@@ -32,18 +61,12 @@ namespace Musha
             this.status = Status.Loading;
 
 #if UNITY_EDITOR
-            //未アセットバンドル化のアセットかどうか
-            var assetPath = AssetDatabase
-                .FindAssets(string.Format("{0} t:{1}", Path.GetFileNameWithoutExtension(this.path), this.type.Name), new string[]{ "Assets" })
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .FirstOrDefault(x => !x.Contains("/Resources/") && Path.ChangeExtension(x, null).EndsWith(this.path, StringComparison.OrdinalIgnoreCase));
-
-            if (!string.IsNullOrEmpty(assetPath))
+            if (!string.IsNullOrEmpty(this.assetPath))
             {
                 AssetManager.Instance.StartDelayActionCoroutine(null, () =>
                 {
-                    //アセットを確保
-                    this.asset = AssetDatabase.LoadAssetAtPath(assetPath, this.type);
+                    //アセットバンドルのシミュレーションロード
+                    this.asset = AssetDatabase.LoadAssetAtPath(this.assetPath, this.type);
 
                     //ステータスを完了に
                     this.status = Status.Completed;

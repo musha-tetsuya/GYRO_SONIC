@@ -19,6 +19,11 @@ namespace Musha
         }
 
         /// <summary>
+        /// 同期ロード
+        /// </summary>
+        protected override void LoadInternal(){}
+
+        /// <summary>
         /// 非同期ロード
         /// </summary>
         public override void LoadAsync(Action onLoaded)

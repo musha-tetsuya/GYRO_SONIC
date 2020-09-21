@@ -33,6 +33,37 @@ namespace Musha
         }
 
         /// <summary>
+        /// 同期ロード
+        /// </summary>
+        protected override void LoadInternal()
+        {
+            //アセットバンドルのロード
+            this.handler.Load();
+
+            if (!this.handler.assetBundle.isStreamedSceneAssetBundle)
+            {
+                //アセット名
+                var assetName = Path.GetFileName(this.path);
+
+                //サブアセットかどうか
+                var isSubAsset = !this.path.Equals(this.handler.assetBundle.name, StringComparison.OrdinalIgnoreCase);
+
+                //MonoBehaviourを継承しているアセットはGameObject型でロードする
+                var assetType = this.isMonoBehaviour ? typeof(GameObject) : this.type;
+
+                //アセットを確保
+                this.asset = isSubAsset
+                    ? this.handler.assetBundle.LoadAssetWithSubAssets(assetName, assetType)[0]
+                    : this.handler.assetBundle.LoadAsset(assetName, assetType);
+
+                if (this.isMonoBehaviour)
+                {
+                    this.asset = (this.asset as GameObject).GetComponent(this.type);
+                }
+            }
+        }
+
+        /// <summary>
         /// 非同期ロード
         /// </summary>
         public override void LoadAsync(Action onLoaded)
@@ -62,8 +93,8 @@ namespace Musha
 
                     //アセットのロード開始
                     var request = isSubAsset
-                                ? this.handler.assetBundle.LoadAssetWithSubAssetsAsync(assetName, assetType)
-                                : this.handler.assetBundle.LoadAssetAsync(assetName, assetType);
+                        ? this.handler.assetBundle.LoadAssetWithSubAssetsAsync(assetName, assetType)
+                        : this.handler.assetBundle.LoadAssetAsync(assetName, assetType);
 
                     request.completed += (_) =>
                     {

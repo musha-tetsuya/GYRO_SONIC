@@ -106,6 +106,39 @@ namespace Musha
         }
 
         /// <summary>
+        /// 同期ロード
+        /// </summary>
+        public void Load()
+        {
+            switch (this.status)
+            {
+                case Status.None:
+                {
+                    //依存関係のロード
+                    foreach (var dependency in this.dependencies)
+                    {
+                        dependency.Load();
+                    }
+
+                    string path = Path.Combine(AssetManager.GetAssetBundleDirectoryPath(), this.info.assetBundleName);
+
+                    //アセットバンドル確保
+                    this.assetBundle = AssetBundle.LoadFromFile(path);
+
+                    //ロード完了
+                    this.status = Status.Completed;
+                }
+                break;
+
+                case Status.Loading:
+                {
+                    Debug.LogErrorFormat("アセットバンドル:{0}は非同期ロード中のため、同期ロード出来ません。", this.info.assetBundleName);
+                }
+                break;
+            }
+        }
+
+        /// <summary>
         /// 非同期ロード
         /// </summary>
         public void LoadAsync(Action onLoaded)
@@ -114,13 +147,14 @@ namespace Musha
             {
                 case Status.None:
                 {
+                    //ステータスをロード中に
+                    this.status = Status.Loading;
+
                     //依存関係を先にロード
                     foreach (var dependency in this.dependencies)
                     {
                         if (dependency.status != Status.Completed)
                         {
-                            this.status = Status.Loading;
-
                             dependency.LoadAsync(() =>
                             {
                                 this.status = Status.None;
@@ -133,10 +167,7 @@ namespace Musha
 
                     //自身のロードを開始
                     string path = Path.Combine(AssetManager.GetAssetBundleDirectoryPath(), this.info.assetBundleName);
-                    this.status = Status.Loading;
-                    this.onLoaded += onLoaded;
                     var request = AssetBundle.LoadFromFileAsync(path);
-                
                     request.completed += (_) =>
                     {
                         //アセットバンドル確保
@@ -144,6 +175,7 @@ namespace Musha
 
                         //ロード完了を通知
                         this.status = Status.Completed;
+                        onLoaded?.Invoke();
                         this.onLoaded?.Invoke();
                         this.onLoaded = null;
                     };

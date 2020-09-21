@@ -65,6 +65,33 @@ namespace Musha
         }
 
         /// <summary>
+        /// 同期ロード
+        /// </summary>
+        public void Load()
+        {
+            switch (this.status)
+            {
+                case Status.None:
+                {
+                    this.status = Status.Completed;
+                    this.LoadInternal();
+                }
+                break;
+
+                case Status.Loading:
+                {
+                    Debug.LogErrorFormat("アセット:{0}は非同期ロード中のため、同期ロード出来ません。", this.path);
+                }
+                break;
+            }
+        }
+
+        /// <summary>
+        /// 同期ロード
+        /// </summary>
+        protected abstract void LoadInternal();
+
+        /// <summary>
         /// 非同期ロード
         /// </summary>
         public abstract void LoadAsync(Action onLoaded);
