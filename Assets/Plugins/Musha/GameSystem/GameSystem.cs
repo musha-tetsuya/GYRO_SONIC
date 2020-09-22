@@ -88,6 +88,8 @@ namespace Musha
 
                 base.OnInspectorGUI();
 
+                GUILayout.Space(10);
+
                 this.layerNames.DoLayoutList();
 
                 this.serializedObject.ApplyModifiedProperties();
