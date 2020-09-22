@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,44 +40,6 @@ namespace Musha
         /// </summary>
         private List<AssetHandler> sceneHandlers = new List<AssetHandler>();
 
-#if UNITY_EDITOR
-        /// <summary>
-        /// シーン情報
-        /// </summary>
-        private EditorSceneInfo[] sceneInfos = null;
-#endif
-
-        /// <summary>
-        /// Awake
-        /// </summary>
-        protected override void Awake()
-        {
-            base.Awake();
-
-#if UNITY_EDITOR
-            //BuildSettingsに含まれているシーンのパス一覧
-            var buildSettingsScenePaths = EditorBuildSettings.scenes
-                .Select(x => x.path)
-                .ToArray();
-
-            //Assets内全シーン情報
-            this.sceneInfos = AssetDatabase
-                .FindAssets("t:SceneAsset", new string[]{ "Assets" })
-                .Select(AssetDatabase.GUIDToAssetPath)
-                .Select(path =>
-                {
-                    var sceneInfo = new EditorSceneInfo();
-                    sceneInfo.path = path;
-                    sceneInfo.isAssetBundle = !buildSettingsScenePaths.Contains(path);
-                    sceneInfo.name = sceneInfo.isAssetBundle
-                        ? path.Remove(0, "Assets/".Length).Replace(".unity", null)
-                        : Path.GetFileNameWithoutExtension(path);
-                    return sceneInfo;
-                })
-                .ToArray();
-#endif
-        }
-
         /// <summary>
         /// アセットバンドルのシーンかどうか
         /// </summary>
@@ -85,7 +47,7 @@ namespace Musha
         {
             bool isAssetBundle = AssetManager.Instance.FindAssetBundleInfo(sceneName) != null;
 #if UNITY_EDITOR
-            isAssetBundle |= this.sceneInfos.Any(x => x.isAssetBundle && x.name.Equals(sceneName, StringComparison.OrdinalIgnoreCase));
+            isAssetBundle |= SceneAssetInfo.Infos.Any(x => x.isAssetBundle && x.name.Equals(sceneName, StringComparison.OrdinalIgnoreCase));
 #endif
             return isAssetBundle;
         }
@@ -105,7 +67,7 @@ namespace Musha
             this.isAutoHideSceneChangeAnimation = true;
 
             //ローディング開始
-            this.sceneChangeAnimation = Instantiate(this.sceneChangeAnimationPrefab, GameCommon.Instance.fadeRoot, false);
+            this.sceneChangeAnimation = Instantiate(this.sceneChangeAnimationPrefab, GameSystem.Instance.overlayCanvas.transform.Find("SceneChangeAnimationRoot"), false);
             this.sceneChangeAnimation.onFinishedIn.AddListener(() => this.OnFinishedIn(sceneName));
             this.sceneChangeAnimation.onFinishedOut.AddListener(this.OnFinishedOut);
             this.sceneChangeAnimation.PlayIn();
@@ -194,15 +156,15 @@ namespace Musha
         {
 #if UNITY_EDITOR
             //シーン情報検索
-            var sceneInfo = this.sceneInfos.FirstOrDefault(x => x.name.Equals(sceneName, StringComparison.OrdinalIgnoreCase));
-            if (sceneInfo == null)
+            var info = SceneAssetInfo.Infos.FirstOrDefault(x => x.name.Equals(sceneName, StringComparison.OrdinalIgnoreCase));
+            if (info == null)
             {
                 Debug.LogErrorFormat("{0}に一致するシーンは存在しません。", sceneName);
                 return;
             }
 
             //アセットバンドルシーンの場合
-            if (sceneInfo.isAssetBundle)
+            if (info.isAssetBundle)
             {
                 //アセットバンドルがロード済みかチェック
                 var handler = AssetManager.Instance.FindAssetHandler(sceneName);
@@ -215,7 +177,7 @@ namespace Musha
                 if (handler is DummyAssetHandler)
                 {
                     //ダミーなので生データを読み込む
-                    EditorSceneManager.LoadSceneAsyncInPlayMode(sceneInfo.path, new LoadSceneParameters(mode)).completed += (_) =>
+                    EditorSceneManager.LoadSceneAsyncInPlayMode(info.path, new LoadSceneParameters(mode)).completed += (_) =>
                     {
                         onLoaded?.Invoke();
                     };
@@ -241,5 +203,67 @@ namespace Musha
                 onCompleted?.Invoke();
             };
         }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// シーン情報
+        /// </summary>
+        private class SceneAssetInfo
+        {
+            /// <summary>
+            /// パス
+            /// </summary>
+            public string path;
+
+            /// <summary>
+            /// 名前
+            /// </summary>
+            public string name;
+
+            /// <summary>
+            /// アセットバンドルかどうか
+            /// </summary>
+            public bool isAssetBundle;
+
+            /// <summary>
+            /// Assets内全シーン情報
+            /// </summary>
+            private static SceneAssetInfo[] infos = null;
+
+            /// <summary>
+            /// Assets内全シーン情報
+            /// </summary>
+            public static SceneAssetInfo[] Infos
+            {
+                get
+                {
+                    if (infos == null)
+                    {
+                        //BuildSettingsに含まれているシーンのパス一覧
+                        var buildSettingsScenePaths = EditorBuildSettings.scenes
+                            .Select(x => x.path)
+                            .ToArray();
+
+                        //Assets内全シーン情報
+                        infos = AssetDatabase
+                            .FindAssets("t:SceneAsset", new string[]{ "Assets" })
+                            .Select(AssetDatabase.GUIDToAssetPath)
+                            .Select(path =>
+                            {
+                                var info = new SceneAssetInfo();
+                                info.path = path;
+                                info.isAssetBundle = !buildSettingsScenePaths.Contains(path);
+                                info.name = info.isAssetBundle
+                                    ? path.Remove(0, "Assets/".Length).Replace(".unity", null)
+                                    : Path.GetFileNameWithoutExtension(path);
+                                return info;
+                            })
+                            .ToArray();
+                    }
+                    return infos;
+                }
+            }
+        }
+#endif
     }
 }

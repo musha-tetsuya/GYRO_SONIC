@@ -175,7 +175,7 @@ PrefabInstance:
     - target: {fileID: 1028397095475172840, guid: 057dcf57b47911e438b41958dda1b283,
         type: 3}
       propertyPath: m_Name
-      value: GameCommon
+      value: GameSystem
       objectReference: {fileID: 0}
     - target: {fileID: 1028397095475172847, guid: 057dcf57b47911e438b41958dda1b283,
         type: 3}
