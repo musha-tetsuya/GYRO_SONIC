@@ -20,6 +20,10 @@ namespace Musha
         /// </summary>
         public ReorderableList reorderableList { get; private set; }
         /// <summary>
+        /// 描画タイプ
+        /// </summary>
+        private Type type = null;
+        /// <summary>
         /// フィールド名一覧
         /// </summary>
         private string[] fieldNames = null;
@@ -35,25 +39,23 @@ namespace Musha
         /// <summary>
         /// construct
         /// </summary>
-        public SimpleReorderableList(SerializedProperty property)
+        public SimpleReorderableList(SerializedProperty property, Type type = null)
         {
             this.reorderableList = new ReorderableList(property.serializedObject, property);
+            this.reorderableList.drawHeaderCallback = this.DrawHeader;
             this.reorderableList.elementHeightCallback = this.GetElementHeight;
             this.reorderableList.drawElementCallback = this.DrawElement;
-        }
+            this.type = type;
 
-        /// <summary>
-        /// construct
-        /// </summary>
-        public SimpleReorderableList(SerializedProperty property, Type type)
-            : this(property)
-        {
-            this.fieldNames = type
-                .GetFields(BindingFlags.Instance | BindingFlags.Public)
-                .Select(info => info.Name)
-                .ToArray();
+            if (this.type != null)
+            {
+                this.fieldNames = type
+                    .GetFields(BindingFlags.Instance | BindingFlags.Public)
+                    .Select(info => info.Name)
+                    .ToArray();
 
-            this.elementHeightSize = this.fieldNames.Length + 1;
+                this.elementHeightSize = this.fieldNames.Length + 1;
+            }
         }
 
         /// <summary>
@@ -77,6 +79,19 @@ namespace Musha
         }
 
         /// <summary>
+        /// ヘッダ描画
+        /// </summary>
+        private void DrawHeader(Rect pos)
+        {
+            string headerText = this.reorderableList.serializedProperty.name;
+            if (headerText.Length > 1)
+            {
+                headerText = Char.ToUpper(headerText[0]) + headerText.Substring(1);
+            }
+            EditorGUI.LabelField(pos, headerText);
+        }
+
+        /// <summary>
         /// リスト要素高さ取得
         /// </summary>
         private float GetElementHeight(int index)
@@ -86,7 +101,7 @@ namespace Musha
             float height = EditorGUIUtility.standardVerticalSpacing
                         + EditorGUIUtility.singleLineHeight;
 
-            if (property.isExpanded)
+            if (this.type != null && property.isExpanded)
             {
                 height *= this.elementHeightSize;
             }
@@ -112,6 +127,12 @@ namespace Musha
         {
             var property = this.reorderableList.serializedProperty.GetArrayElementAtIndex(index);
             var pos = position;
+
+            if (this.type == null)
+            {
+                EditorGUI.PropertyField(pos, property);
+                return;
+            }
 
             AddIndent(ref pos);
 
