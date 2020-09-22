@@ -1,0 +1,1 @@
+[{"id":1,"hp":10,"items":[{"id":1,"name":"a","power":100},{"id":2,"name":"b","power":200}]},{"id":2,"hp":20,"items":[{"id":1,"name":"a","power":100},{"id":2,"name":"b","power":200}]}]
