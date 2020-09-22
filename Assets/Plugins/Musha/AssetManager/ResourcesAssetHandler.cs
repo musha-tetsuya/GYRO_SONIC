@@ -17,6 +17,11 @@ namespace Musha
     {
 #if UNITY_EDITOR
         /// <summary>
+        /// アセットタイプがMonoBehaviourを継承しているかどうか
+        /// </summary>
+        private bool isMonoBehaviour = false;
+
+        /// <summary>
         /// アセットバンドルシミュレーションロード用のパス
         /// </summary>
         private string assetPath = null;
@@ -28,8 +33,9 @@ namespace Musha
             : base(path, type)
         {
 #if UNITY_EDITOR
+            this.isMonoBehaviour = this.type.IsSubclassOf(typeof(MonoBehaviour));
             this.assetPath = AssetDatabase
-                .FindAssets(string.Format("{0} t:{1}", Path.GetFileNameWithoutExtension(this.path), this.type.Name), new string[]{ "Assets" })
+                .FindAssets(string.Format("{0} t:{1}", Path.GetFileNameWithoutExtension(this.path), this.isMonoBehaviour ? "GameObject" : this.type.Name), new string[]{ "Assets" })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .FirstOrDefault(x => !x.Contains("/Resources/") && Path.ChangeExtension(x, null).EndsWith(this.path, StringComparison.OrdinalIgnoreCase));
 #endif
@@ -43,8 +49,18 @@ namespace Musha
 #if UNITY_EDITOR
             if (!string.IsNullOrEmpty(this.assetPath))
             {
-                //アセットバンドルのシミュレーションロード
-                this.asset = AssetDatabase.LoadAssetAtPath(this.assetPath, this.type);
+                if (this.isMonoBehaviour)
+                {
+                    //MonoBehaviourを継承しているアセットはGameObject型でロードする
+                    this.asset = AssetDatabase.LoadAssetAtPath<GameObject>(this.assetPath);
+                    this.asset = (this.asset as GameObject).GetComponent(this.type);
+                }
+                else
+                {
+                    //生データを書き換えないように、Instantiateしたアセットを確保する
+                    this.asset = AssetDatabase.LoadAssetAtPath(this.assetPath, this.type);
+                    this.asset = UnityEngine.Object.Instantiate(this.asset);
+                }
                 return;
             }
 #endif
@@ -65,8 +81,18 @@ namespace Musha
             {
                 AssetManager.Instance.StartDelayActionCoroutine(null, () =>
                 {
-                    //アセットバンドルのシミュレーションロード
-                    this.asset = AssetDatabase.LoadAssetAtPath(this.assetPath, this.type);
+                    if (this.isMonoBehaviour)
+                    {
+                        //MonoBehaviourを継承しているアセットはGameObject型でロードする
+                        this.asset = AssetDatabase.LoadAssetAtPath<GameObject>(this.assetPath);
+                        this.asset = (this.asset as GameObject).GetComponent(this.type);
+                    }
+                    else
+                    {
+                        //生データを書き換えないように、Instantiateしたアセットを確保する
+                        this.asset = AssetDatabase.LoadAssetAtPath(this.assetPath, this.type);
+                        this.asset = UnityEngine.Object.Instantiate(this.asset);
+                    }
 
                     //ステータスを完了に
                     this.status = Status.Completed;
