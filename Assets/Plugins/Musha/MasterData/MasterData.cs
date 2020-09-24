@@ -24,7 +24,7 @@ namespace Musha
     /// <summary>
     /// マスターデータベース基底
     /// </summary>
-    public abstract class MasterDB<InstanceType, DataType>
+    public abstract class MasterDB<InstanceType, DataType, KeyType>
         where InstanceType : new()
         where DataType : MasterData
     {
@@ -39,14 +39,19 @@ namespace Musha
         public abstract string path { get; }
 
         /// <summary>
-        /// データリスト
+        /// Dictionary化する際のKey
         /// </summary>
-        private List<DataType> dataList = null;
+        protected abstract Func<DataType, KeyType> keySelector { get; }
 
         /// <summary>
         /// データリスト
         /// </summary>
-        public List<DataType> DataList
+        private Dictionary<KeyType, DataType> dataList = null;
+
+        /// <summary>
+        /// データリスト
+        /// </summary>
+        public Dictionary<KeyType, DataType> DataList
         {
             get
             {
@@ -54,7 +59,7 @@ namespace Musha
                 if (this.dataList == null)
                 {
                     var jsonAssetPath = AssetDatabase
-                        .FindAssets(string.Format("{0} t:TextAsset", Path.GetFileNameWithoutExtension(path), new string[]{ "Assets" }))
+                        .FindAssets(string.Format("{0} t:TextAsset", Path.GetFileNameWithoutExtension(this.path), new string[]{ "Assets" }))
                         .Select(AssetDatabase.GUIDToAssetPath)
                         .FirstOrDefault(x => Path.ChangeExtension(x, null).EndsWith(this.path, StringComparison.OrdinalIgnoreCase));
 
@@ -67,7 +72,7 @@ namespace Musha
 #endif
                 if (this.dataList == null)
                 {
-                    this.dataList = new List<DataType>();
+                    this.dataList = new Dictionary<KeyType, DataType>();
                 }
 
                 return this.dataList;
@@ -77,7 +82,7 @@ namespace Musha
         /// <summary>
         /// データリストのセット
         /// </summary>
-        public void SetDataList(List<DataType> dataList)
+        public void SetDataList(Dictionary<KeyType, DataType> dataList)
         {
             this.dataList = dataList;
         }
@@ -87,15 +92,20 @@ namespace Musha
         /// </summary>
         public void SetDataList(string json)
         {
-            this.SetDataList(Utf8Json.JsonSerializer.Deserialize<List<DataType>>(json));
+            this.SetDataList(Utf8Json.JsonSerializer.Deserialize<DataType[]>(json).ToDictionary(this.keySelector));
         }
+    }
 
+    /// <summary>
+    /// IDがKeyのスタンダードなマスターDB
+    /// </summary>
+    public abstract class StandardMasterDB<InstanceType, DataType> : MasterDB<InstanceType, DataType, long>
+        where InstanceType : new()
+        where DataType : MasterData
+    {
         /// <summary>
-        /// IDからデータを取得
+        /// Dictionary化する際のKey
         /// </summary>
-        public DataType GetById(long id)
-        {
-            return this.DataList.Find(x => x.id == id);
-        }
+        protected override Func<DataType, long> keySelector => (x) => x.id;
     }
 }

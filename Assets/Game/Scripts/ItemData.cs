@@ -8,7 +8,7 @@ public class ItemData : Musha.MasterData
     public int power;
 }
 
-public class ItemDB : Musha.MasterDB<ItemDB, ItemData>
+public class ItemDB : Musha.StandardMasterDB<ItemDB, ItemData>
 {
-    public override string path => "ItemData";
+    public override string path => "AssetBundle/ItemData";
 }

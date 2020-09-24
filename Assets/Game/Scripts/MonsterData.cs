@@ -2,17 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Serializable]
 public class MonsterData : Musha.MasterData
 {
     public int hp;
-
     public ItemData[] items;
 }
 
-public class MonsterDB : Musha.MasterDB<MonsterDB, MonsterData>
+public class MonsterDB : Musha.StandardMasterDB<MonsterDB, MonsterData>
 {
-    public override string path => "MonsterData";
+    public override string path => "AssetBundle/MonsterData";
 
     public void MonsterTest()
     {

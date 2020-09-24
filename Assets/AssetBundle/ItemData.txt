@@ -1,1 +1,1 @@
-[{"id":0,"name":"a","power":100},{"id":0,"name":"b","power":200}]
+[{"id":1,"name":"a","power":100},{"id":2,"name":"b","power":200}]

@@ -49,6 +49,8 @@ namespace Musha
             {
 #if UNITY_EDITOR
                 assetBundleDirectoryPath = Application.dataPath.Replace("Assets", "AssetBundle");
+#elif UNITY_PS4
+                assetBundleDirectoryPath = Application.streamingAssetsPath + "/AssetBundle";
 #else
                 assetBundleDirectoryPath = Application.persistentDataPath + "/AssetBundle";
 #endif
@@ -417,6 +419,11 @@ namespace Musha
         [MenuItem("Assets/AssetManager/BuildAssetBundle")]
         private static void BuildAssetBundle()
         {
+            if (!Directory.Exists(GetAssetBundleDirectoryPath()))
+            {
+                Directory.CreateDirectory(GetAssetBundleDirectoryPath());
+            }
+
             BuildPipeline.BuildAssetBundles(
                 GetAssetBundleDirectoryPath(),
                 BuildAssetBundleOptions.None,

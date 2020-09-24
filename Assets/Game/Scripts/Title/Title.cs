@@ -10,12 +10,8 @@ public class Title : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        var data = Musha.AssetManager.Instance.Load<TitleTestData>("AssetBundle/TitleTestData");
-        data.id = 999;
-
-        var obj = Musha.AssetManager.Instance.Load<TitleTestDataBehaviour>("AssetBundle/TitleTestDataBehaviour");
-        obj = Instantiate(obj, canvas.transform, false);
-        obj.id = 254;
+        Debug.Log(ItemDB.Instance.DataList[1].name);
+        Debug.Log(MonsterDB.Instance.DataList[1].hp);
     }
 
     // Update is called once per frame
