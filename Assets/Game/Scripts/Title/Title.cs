@@ -10,8 +10,8 @@ public class Title : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log(ItemDB.Instance.DataList[1].name);
-        Debug.Log(MonsterDB.Instance.DataList[1].hp);
+//        Debug.Log(ItemDB.Instance.DataList[1].name);
+//        Debug.Log(MonsterDB.Instance.DataList[1].hp);
     }
 
     // Update is called once per frame

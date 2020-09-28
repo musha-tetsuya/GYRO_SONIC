@@ -240,5 +240,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c5f57150a4c74f46b18f2bc961aff78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sceneChangeAnimationPrefab: {fileID: 6865024382672739400, guid: 7a0233e8f329d8249aaa0c17c81da0bc,
-    type: 3}

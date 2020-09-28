@@ -43,14 +43,22 @@ namespace Musha
             //レイヤー作成
             for (int i = 0, imax = this.layerNames.Count; i < imax; i++)
             {
-                var layer = new GameObject(this.layerNames[i], typeof(RectTransform));
-                var rectTransform = layer.transform as RectTransform;
-                rectTransform.SetParent(this.overlayCanvas.transform);
-                rectTransform.offsetMin = Vector2.zero;
-                rectTransform.offsetMax = Vector2.zero;
-                rectTransform.anchorMin = Vector2.zero;
-                rectTransform.anchorMax = Vector2.one;
-                rectTransform.pivot = Vector2.one * 0.5f;
+                var rectTransform = this.overlayCanvas.transform.Find(this.layerNames[i]) as RectTransform;
+                if (rectTransform == null)
+                {
+                    var layer = new GameObject(this.layerNames[i], typeof(RectTransform));
+                    rectTransform = layer.transform as RectTransform;
+                    rectTransform.SetParent(this.overlayCanvas.transform);
+                    rectTransform.offsetMin = Vector2.zero;
+                    rectTransform.offsetMax = Vector2.zero;
+                    rectTransform.anchorMin = Vector2.zero;
+                    rectTransform.anchorMax = Vector2.one;
+                    rectTransform.pivot = Vector2.one * 0.5f;
+                }
+                else
+                {
+                    rectTransform.SetAsLastSibling();
+                }
             }
 
             //タッチブロック作成

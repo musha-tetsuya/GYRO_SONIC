@@ -37,7 +37,8 @@ namespace Musha
             this.assetPath = AssetDatabase
                 .FindAssets(string.Format("{0} t:{1}", Path.GetFileNameWithoutExtension(this.path), this.isMonoBehaviour ? "GameObject" : this.type.Name), new string[]{ "Assets" })
                 .Select(AssetDatabase.GUIDToAssetPath)
-                .FirstOrDefault(x => !x.Contains("/Resources/") && Path.ChangeExtension(x, null).EndsWith(this.path, StringComparison.OrdinalIgnoreCase));
+                .Where(x => !x.EndsWith(".cs"))
+                .FirstOrDefault(x => !x.Contains("/Resources/") && Path.ChangeExtension(x, null).EndsWith(this.path.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase));
 #endif
         }
 

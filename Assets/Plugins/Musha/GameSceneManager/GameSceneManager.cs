@@ -18,24 +18,6 @@ namespace Musha
     public class GameSceneManager : SingletonMonoBehaviour<GameSceneManager>
     {
         /// <summary>
-        /// シーン切り替えアニメーションプレハブ
-        /// </summary>
-        [SerializeField]
-        private InLoopOutAnimation sceneChangeAnimationPrefab = null;
-
-        /// <summary>
-        /// シーン切り替えアニメーションを自動で消すかどうか
-        /// </summary>
-        [NonSerialized]
-        public bool isAutoHideSceneChangeAnimation = true;
-
-        /// <summary>
-        /// シーン切り替えアニメーション
-        /// </summary>
-        [NonSerialized]
-        public InLoopOutAnimation sceneChangeAnimation = null;
-
-        /// <summary>
         /// ロードしたアセットバンドルシーン
         /// </summary>
         private List<AssetHandler> sceneHandlers = new List<AssetHandler>();
@@ -55,28 +37,7 @@ namespace Musha
         /// <summary>
         /// シーン切り替え
         /// </summary>
-        public void ChangeSceneAsync(string sceneName)
-        {
-            if (this.sceneChangeAnimation != null && this.sceneChangeAnimation.gameObject != null)
-            {
-                //シーン切り替え中なので不可
-                return;
-            }
-
-            //ローディング自動非表示フラグON
-            this.isAutoHideSceneChangeAnimation = true;
-
-            //ローディング開始
-            this.sceneChangeAnimation = Instantiate(this.sceneChangeAnimationPrefab, GameSystem.Instance.overlayCanvas.transform.Find("SceneChangeAnimationRoot"), false);
-            this.sceneChangeAnimation.onFinishedIn.AddListener(() => this.OnFinishedIn(sceneName));
-            this.sceneChangeAnimation.onFinishedOut.AddListener(this.OnFinishedOut);
-            this.sceneChangeAnimation.PlayIn();
-        }
-
-        /// <summary>
-        /// ローディング表示完了後、シーン遷移処理
-        /// </summary>
-        private void OnFinishedIn(string sceneName)
+        public virtual void ChangeSceneAsync(string sceneName)
         {
             //現在のシーンをアンロードする前にHierarchyが空にならないように空シーンを作成
             SceneManager.CreateScene("Empty");
@@ -109,10 +70,10 @@ namespace Musha
                     {
                         this.LoadSceneAsync(sceneName, LoadSceneMode.Single, () =>
                         {
-                            if (this.isAutoHideSceneChangeAnimation)
+                            //if (this.isAutoHideSceneChangeAnimation)
                             {
                                 //ローディング自動非表示
-                                this.sceneChangeAnimation.PlayOut();
+                                //this.sceneChangeAnimation.PlayOut();
                             }
                         });
                     };
@@ -130,19 +91,6 @@ namespace Musha
                     }
                 };
             };
-        }
-
-        /// <summary>
-        /// ローディング非表示完了後、破棄
-        /// </summary>
-        private void OnFinishedOut()
-        {
-            if (this.sceneChangeAnimation != null && this.sceneChangeAnimation.gameObject != null)
-            {
-                Destroy(this.sceneChangeAnimation.gameObject);
-            }
-
-            this.sceneChangeAnimation = null;
         }
 
         /// <summary>
