@@ -64,6 +64,9 @@ namespace Musha
         /// </summary>
         public AssetBundleInfo FindAssetBundleInfo(string path)
         {
+            //バックスラッシュは通常のスラッシュに直す
+            path = path.Replace('\\', '/');
+
             int imax = this.infoList.Count;
 
             //パスとアセットバンドル名の完全一致検索
@@ -94,6 +97,9 @@ namespace Musha
         /// </summary>
         public AssetHandler FindAssetHandler(string path, Type type = null)
         {
+            //バックスラッシュは通常のスラッシュに直す
+            path = path.Replace('\\', '/');
+
             return this.handlers.Find(handler =>
             {
                 if (path.Equals(handler.path, StringComparison.OrdinalIgnoreCase))
@@ -393,21 +399,9 @@ namespace Musha
                 //選択しているアセットのパス
                 string assetPath = AssetDatabase.GetAssetPath(instanceId);
 
-                //パスからアセットバンドル名を設定
-                string assetBundleName = assetPath;
-
-                //先頭の「Assets/」を除去
-                assetBundleName = assetBundleName.Remove(0, "Assets/".Length);
-
-                //拡張子を除去
-                if (Path.HasExtension(assetBundleName))
-                {
-                    string extension = Path.GetExtension(assetBundleName);
-                    assetBundleName = assetBundleName.Replace(extension, null);
-                }
-
+                //パスからアセットバンドル名を設定（先頭の「Assets/」と拡張子を除去）
                 var importer = AssetImporter.GetAtPath(assetPath);
-                importer.assetBundleName = assetBundleName;
+                importer.assetBundleName = Path.ChangeExtension(assetPath, null).Remove(0, "Assets/".Length);
             }
 
             AssetDatabase.RemoveUnusedAssetBundleNames();

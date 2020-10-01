@@ -60,7 +60,7 @@ namespace Musha
         /// </summary>
         protected AssetHandler(string path, Type type)
         {
-            this.path = path;
+            this.path = path.Replace('\\', '/');
             this.type = type;
         }
 

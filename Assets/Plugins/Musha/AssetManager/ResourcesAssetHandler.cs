@@ -38,9 +38,34 @@ namespace Musha
                 .FindAssets(string.Format("{0} t:{1}", Path.GetFileNameWithoutExtension(this.path), this.isMonoBehaviour ? "GameObject" : this.type.Name), new string[]{ "Assets" })
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Where(x => !x.EndsWith(".cs"))
-                .FirstOrDefault(x => !x.Contains("/Resources/") && Path.ChangeExtension(x, null).EndsWith(this.path.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase));
+                .FirstOrDefault(x => !x.Contains("/Resources/") && Path.ChangeExtension(x, null).EndsWith(this.path, StringComparison.OrdinalIgnoreCase));
 #endif
         }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// アセットの確保
+        /// </summary>
+        private void SetAsset()
+        {
+            if (this.isMonoBehaviour)
+            {
+                //MonoBehaviourを継承しているアセットはGameObject型でロードする
+                this.asset = AssetDatabase.LoadAssetAtPath<GameObject>(this.assetPath);
+                this.asset = (this.asset as GameObject).GetComponent(this.type);
+            }
+            else
+            {
+                this.asset = AssetDatabase.LoadAssetAtPath(this.assetPath, this.type);
+
+                if (!(this.asset is GameObject))
+                {
+                    //GameObject以外のアセットは生データを書き換えないようにInstantiateしたアセットを確保する
+                    this.asset = UnityEngine.Object.Instantiate(this.asset);
+                }
+            }
+        }
+#endif
 
         /// <summary>
         /// 同期ロード
@@ -50,18 +75,8 @@ namespace Musha
 #if UNITY_EDITOR
             if (!string.IsNullOrEmpty(this.assetPath))
             {
-                if (this.isMonoBehaviour)
-                {
-                    //MonoBehaviourを継承しているアセットはGameObject型でロードする
-                    this.asset = AssetDatabase.LoadAssetAtPath<GameObject>(this.assetPath);
-                    this.asset = (this.asset as GameObject).GetComponent(this.type);
-                }
-                else
-                {
-                    //生データを書き換えないように、Instantiateしたアセットを確保する
-                    this.asset = AssetDatabase.LoadAssetAtPath(this.assetPath, this.type);
-                    this.asset = UnityEngine.Object.Instantiate(this.asset);
-                }
+                //アセットの確保
+                this.SetAsset();
                 return;
             }
 #endif
@@ -82,18 +97,8 @@ namespace Musha
             {
                 AssetManager.Instance.StartDelayActionCoroutine(null, () =>
                 {
-                    if (this.isMonoBehaviour)
-                    {
-                        //MonoBehaviourを継承しているアセットはGameObject型でロードする
-                        this.asset = AssetDatabase.LoadAssetAtPath<GameObject>(this.assetPath);
-                        this.asset = (this.asset as GameObject).GetComponent(this.type);
-                    }
-                    else
-                    {
-                        //生データを書き換えないように、Instantiateしたアセットを確保する
-                        this.asset = AssetDatabase.LoadAssetAtPath(this.assetPath, this.type);
-                        this.asset = UnityEngine.Object.Instantiate(this.asset);
-                    }
+                    //アセットの確保
+                    this.SetAsset();
 
                     //ステータスを完了に
                     this.status = Status.Completed;
@@ -101,7 +106,6 @@ namespace Musha
                     //ロード完了を通知
                     onLoaded?.Invoke();
                 });
-
                 return;
             }
 #endif
