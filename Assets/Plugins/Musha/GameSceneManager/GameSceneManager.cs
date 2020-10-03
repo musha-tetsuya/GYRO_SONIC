@@ -18,6 +18,32 @@ namespace Musha
     public class GameSceneManager : SingletonMonoBehaviour<GameSceneManager>
     {
         /// <summary>
+        /// イベントリスナー
+        /// </summary>
+        public interface IEventListener
+        {
+            /// <summary>
+            /// シーン切り替え時
+            /// </summary>
+            void OnChangeScene(string sceneName);
+
+            /// <summary>
+            /// シーンロード完了時
+            /// </summary>
+            void OnSceneLoaded();
+        }
+
+        /// <summary>
+        /// イベントリスナー
+        /// </summary>
+        public IEventListener listener = null;
+
+        /// <summary>
+        /// 現在のイベントリスナー
+        /// </summary>
+        private IEventListener currentListener = null;
+
+        /// <summary>
         /// ロードしたアセットバンドルシーン
         /// </summary>
         private List<AssetHandler> sceneHandlers = new List<AssetHandler>();
@@ -37,8 +63,17 @@ namespace Musha
         /// <summary>
         /// シーン切り替え
         /// </summary>
-        public virtual void ChangeSceneAsync(string sceneName)
+        public void ChangeSceneAsync(string sceneName)
         {
+            if (this.listener != null && this.listener != this.currentListener)
+            {
+                //リスナーがいるなら処理を移譲
+                this.currentListener = this.listener;
+                this.currentListener.OnChangeScene(sceneName);
+                return;
+            }
+            this.currentListener = null;
+
             //現在のシーンをアンロードする前にHierarchyが空にならないように空シーンを作成
             SceneManager.CreateScene("Empty");
 
@@ -70,11 +105,8 @@ namespace Musha
                     {
                         this.LoadSceneAsync(sceneName, LoadSceneMode.Single, () =>
                         {
-                            //if (this.isAutoHideSceneChangeAnimation)
-                            {
-                                //ローディング自動非表示
-                                //this.sceneChangeAnimation.PlayOut();
-                            }
+                            //シーンロード完了イベント
+                            this.listener?.OnSceneLoaded();
                         });
                     };
 
